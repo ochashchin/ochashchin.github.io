@@ -1,0 +1,64 @@
+body {
+    background: #eeedec;
+    letter-spacing: 0.2em;
+    font-size: 0.8em;
+}
+
+.container {
+    max-width: 400px;
+}
+
+.btn:hover{
+    color: black ;
+    background: aqua;
+    border-color: aqua;
+}
+
+.btn {
+    border-radius: 0;
+    border: 0;
+}
+
+.icon {
+    position: relative;
+    top: -50px;
+    border-radius: 50%;
+    width: 100px;
+    margin-bottom: -50px;
+}
+
+.animation.fade-in-up {
+    animation-duration: 500ms;
+    animation-name: fade-in-up;
+    animation-delay: 500ms;
+    animation-fill-mode: forwards;
+}
+
+.animation.fade-out-down {
+    animation-duration: 500ms;
+    animation-name: fade-out-down;
+    animation-delay: 500ms;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fade-in-up {
+    from {
+        margin: 100px 0 0;
+        opacity: 0;
+    }
+    to {
+        margin: unset;
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out-down{
+    from {
+        margin: unset;
+        opacity: 1;
+    }
+    to {
+        margin: 100px 0 0;
+        opacity: 0;
+    }
+}
