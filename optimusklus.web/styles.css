@@ -41,7 +41,7 @@ body {
 }
 
 @media (min-width: 384px) {
-    .col-md-auto {
+    .col-auto {
         flex: 0 0 auto;
         width: auto;
     }
@@ -67,6 +67,12 @@ body {
 
     i {
         padding-right: 10px
+    }
+
+    .img-fix {
+        width: 100%;
+        height: 100%;
+        transform: translate(0%, -5%);
     }
 }
 
@@ -97,7 +103,13 @@ body {
         padding-right: 0
     }
 
+    .img-fix{
+        width: 100%;
+        height: 100%;
+        transform: translate(0%, 0%);
+    }
 }
+
 
 .myHeight {
     height: 110px;
@@ -135,6 +147,7 @@ svg {
 .card-img {
     max-width: 752px;
     max-height: 364px;
+    overflow: hidden;
     border-radius: 20px;
 }
 
@@ -192,4 +205,15 @@ svg {
     font-family: 'Nunito', sans-serif;
     letter-spacing: 2px;
     font-style: italic;
+}
+
+.form-control + label  {
+    color: white;
+}
+.form-control {
+    background-color: rgba(255, 255, 255, 0);
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0);
 }
