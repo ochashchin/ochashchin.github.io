@@ -4,7 +4,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Services</title>
+    <title>Contacts</title>
 
     <link href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round"
           rel="stylesheet">
@@ -17,6 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Courgette&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+
+
 </head>
 
 <body>
@@ -200,153 +202,203 @@
 
 <main>
     <div class="container-lg">
-        <div class="row d-flex justify-content-center">
 
-            <div class="col" style="aspect-ratio: 1000 / 655;">
+        <div class="col aspectFix" style="">
 
-                <div class="row justify-content-center align-items-top" style="aspect-ratio: 1000 / 50;">
-                    <h4 class="col-auto sloganFont text-white  text-center drop-shadow">
-                        Bij OptimumKlus kunt U terecht voor de volgende Services
-                    </h4>
-                </div>
+            <div class="row justify-content-center align-items-top" style="aspect-ratio: 1000 / 50;">
+                <h4 class="col-auto sloganFont text-white  text-center drop-shadow">
+                    Bij OptimumKlus kunt U terecht voor de volgende Services
+                </h4>
+            </div>
 
-                <div class="row d-flex justify-content-center" style="aspect-ratio: 1000 / 15;">
+            <div class="row justify-content-center" style="aspect-ratio: 1000 / 15;">
 
-                </div>
+            </div>
 
-                <div class="row justify-content-between align-items-start" style="aspect-ratio: 1000 / 555;">
-                    <div class="col">
-                        <div class="row" style="aspect-ratio: 445 / 555; height: 100%">
-                            <div class="col">
-
-                                <form class=" " style="
+            <div class="row controlMobVisibility" style="aspect-ratio: 1000 / 655; ">
+                <div style="aspect-ratio: 1000 / 655; height: 100%">
+                    <div class="row" style="aspect-ratio: 1000 / 655;">
+                        <div class="col" style="height: 100%;">
+                            <form id="mForm" style="
+                                height: 100%;
                                 color: #212529;
                                 font-family: 'Nunito', sans-serif;
                                 background-color: rgba(0, 0, 0, 0.25);
                                 border-radius: 20px;
-                                border-color: rgba(250, 250, 250, 0.0);">
+                                border-color: rgba(250, 250, 250, 0.0);
+                                position: relative;">
+                                <fieldset>
+                                    <div class="form-floating" style="">
+                                        <input type="text" class="form-control text-white" id="mName" required="" placeholder="name@example.com">
+                                        <label for="mName">Naam *</label>
+                                    </div>
 
-                                    <fieldset >
-                                        <div class="form-floating mb-3" style="">
-                                            <input type="email" class="form-control text-white" id="floatingInput" placeholder="name@example.com">
-                                            <label for="floatingInput">Email address</label>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="disabledSelect" class="form-label">Disabled select menu</label>
-                                            <select id="disabledSelect" class="form-select">
-                                                <option>Disabled select</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" disabled>
-                                                <label class="form-check-label" for="disabledFieldsetCheck">
-                                                    Can't check this
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary text-white" style="z-index: -1;  background-color: #0d6efd">Submit</button>
-                                    </fieldset>
-                                </form>
+                                    <div class="form-floating" style="">
+                                        <input type="email" class="form-control text-white" id="mEmail" required="" placeholder="name@example.com">
+                                        <label for="mEmail">E-mail *</label>
+                                    </div>
 
+                                    <div class="form-floating" style="">
+                                        <input type="text" class="form-control text-white" id="mTel" required="" placeholder="name@example.com">
+                                        <label for="mTel">Telefoon *</label>
+                                    </div>
 
+                                    <div class="form-floating controlWebVisibility" style="">
+                                        <input type="text" class="form-control text-white" id="mTopic">
+                                        <label for="mTopic">Onderwerp</label>
+                                    </div>
 
-                            </div>
+                                    <div class="form-floating" style="aspect-ratio: 445 / 325; ">
+                                        <textarea class="form-control textForm-control text-white" placeholder="Leave a comment here" style="border-width: 0; height: 100%; resize:none;" required="" id="mMessage"></textarea>
+                                        <label for="mMessage">Bericht *</label>
+                                    </div>
+
+                                    <div style="aspect-ratio: 445 / 40; position: absolute; bottom: 25px; right: 25px;">
+                                        <button id="mSubmit" type="submit" class="btn-outline-light text-white" style="width: 100%; border-radius: 20px;">Verstuur</button>
+                                    </div>
+                                </fieldset>
+                            </form>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="row" style="aspect-ratio: 390 / 555; height: 100%">
-                            <div class="col d-grid" style="aspect-ratio: 390 / 555;">
-                                <div class="row">
-                                    <h4 class="col-auto sloganFont text-white drop-shadow" style="">
-                                        Lediging, opkuis en ordelijk opruimen van:
-                                    </h4>
-                                </div>
-                                <div class="row">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Zolder, hobbyruimte, garage, kelder
+                </div>
+            </div>
+
+            <div class="row controlWebVisibility" style="aspect-ratio: 1000 / 555;">
+                <div style="aspect-ratio: 1000 / 555;">
+                    <div class="row" style="aspect-ratio: 1000 / 555;">
+                        <div class="col">
+                            <form id="wForm" style="
+                                height: 95%;
+                                aspect-ratio: 445 / 555;
+                                color: #212529;
+                                font-family: 'Nunito', sans-serif;
+                                background-color: rgba(0, 0, 0, 0.25);
+                                border-radius: 20px;
+                                border-color: rgba(250, 250, 250, 0.0);
+                                position: relative;">
+                                <fieldset>
+                                    <div class="form-floating" style="">
+                                        <input type="text" class="form-control text-white" id="wName" required="" placeholder="name@example.com">
+                                        <label for="wName">Naam *</label>
+                                    </div>
+
+                                    <div class="form-floating" style="">
+                                        <input type="email" class="form-control text-white" id="wEmail" required="" placeholder="name@example.com">
+                                        <label for="wEmail">E-mail *</label>
+                                    </div>
+
+                                    <div class="form-floating" style="">
+                                        <input type="tel" class="form-control text-white" id="wTel" required="" placeholder="name@example.com">
+                                        <label for="wTel">Telefoon *</label>
+                                    </div>
+
+                                    <div class="form-floating controlWebVisibility" style="">
+                                        <input type="text" class="form-control text-white" id="wTopic">
+                                        <label for="wTopic">Onderwerp</label>
+                                    </div>
+
+                                    <div class="form-floating" style="aspect-ratio: 445 / 325; ">
+                                        <textarea class="form-control textForm-control text-white" placeholder="Leave a comment here" style="border-width: 0; height: 100%; resize:none;" required="" id="wMessage"></textarea>
+                                        <label for="wMessage">Bericht *</label>
+                                    </div>
+
+                                    <div style="aspect-ratio: 445 / 40; position: absolute; bottom: 25px; right: 25px;">
+                                        <button id="wSubmit" type="submit" class="btn-outline-light text-white" style="width: 100%; border-radius: 20px;">Verstuur</button>
+                                    </div>
+
+                                </fieldset>
+                            </form>
+                        </div>
+                        <div class="col d-grid " style="aspect-ratio: 390 / 555; height: 100% ">
+                            <div class="row align-items-end">
+                                <h4 class="col-auto sloganFont  text-white drop-shadow" style="">
+                                    OptimumKlus
+                                </h4>
+                            </div>
+                            <div class="row align-items-center">
+                                    <span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif;">
+                                         Ivan Tkachenko
                                     </span>
-                                </div>
-                                <div class="row">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Handelspanden en opslag
+                            </div>
+                            <div class="row align-items-start">
+                                    <span class="col-auto text-white  drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                         Adres: Kruisbekstraat 24/6
                                     </span>
-                                </div>
-                                <div class="row">
-                                    <h4 class="col-auto sloganFont text-white drop-shadow" style="">
-                                        Meerijd service:
-                                    </h4>
-                                </div>
-                                <div class="row">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Goederen ophalen in de winkel en dezelfde dag monteren? Dat kan!
-                                                        </span>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Gordijnrails
-                                    </span>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Gordijnbakken
-                                    </span>
-                                </div>
-                                <div class="row">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Gordijnroedes
-                                    </span>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        Rol of vouwgordijnen
-                                    </span>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <h4 class="col-auto sloganFont text-white drop-shadow" style="">
-                                        Ook in bezit van C/CE rijbewijs:
-                                    </h4>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <span class="col-auto text-white drop-shadow"
-                                          style="font-family: 'Nunito', sans-serif; line-height: 15px;">
-                                        voor o.a. helpen verhuizen
-                                                        </span>
-                                </div>
-                                <div class="row controlWebVisibility">
-                                    <h4 class="col-auto sloganFont text-white drop-shadow">
-                                        Enkele voorbelden
-                                    </h4>
-                                </div>
+                            </div>
+                            <div class="row align-items-end">
+                                <h4 class="col-auto sloganFont text-white drop-shadow" style="">
+                                    Vereiste:
+                                </h4>
+                            </div>
+                            <div class="row">
+                                <table class="table col-auto table-borderless">
+                                    <tbody>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                BTWnr:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                BE0654.804.240</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                Bank:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                ING</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                IBAN:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                BE65 3770 7568 5396</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                BIC:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                BBRUBEBB</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                Tel:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                (+32) 0488-104886</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                Email:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                info@optimumklus.be</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                Website:</span></td>
+                                        <td><span class="col-auto text-white drop-shadow" style="font-family: 'Nunito', sans-serif; line-height: 15px;">
+                                                www.optimumklus.be</span></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="row justify-content-center" style="aspect-ratio: 1000 / 35;">
-                    <div class="col bd-highlight myButtonWidth">
-                        <div class="row justify-content-center">
-                            <div class="row" style="height: 1vm">
-                                <div class="col justify-content-center">
-                                    <svg viewBox="0 0 440 2">
-                                        <path style="fill: #d7e029;"
-                                              d="M466.93,1041.53l18.41-.19,48.52-.37,68.6-.31,78.64-.13,78.64,0.13,68.6,0.3,48.52,0.37,18.41,0.19-18.41.19-48.52.37-68.6.3-78.64.13-78.64-.13-68.6-.31-48.52-.37Z"
-                                              transform="translate(-460.0 -1040.53)"/>
-                                    </svg>
-                                </div>
+            <div class="row justify-content-center" style="aspect-ratio: 1000 / 25;">
+                <div class="col bd-highlight myButtonWidth">
+                    <div class="row justify-content-center">
+                        <div class="row" style="height: 1vm">
+                            <div class="col justify-content-center">
+                                <svg viewBox="0 0 440 2">
+                                    <path style="fill: #d7e029;" d="M466.93,1041.53l18.41-.19,48.52-.37,68.6-.31,78.64-.13,78.64,0.13,68.6,0.3,48.52,0.37,18.41,0.19-18.41.19-48.52.37-68.6.3-78.64.13-78.64-.13-68.6-.31-48.52-.37Z" transform="translate(-460.0 -1040.53)"></path>
+                                </svg>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+
     </div>
 </main>
 
@@ -389,7 +441,7 @@
                 <div class="col myFooterContactsRight" style="margin-top: 3rem">
                     <div class="row justify-content-end"
                          style="padding-right: 1rem; padding-bottom: 1.4rem; margin-top: -1rem; text-align: center">
-                        <button class="col-md-auto btn-outline-light">Contact</button>
+                        <button class="col-auto btn-outline-light">Contact</button>
                     </div>
                     <div class="row justify-content-end" style="line-height: 1.5">
                         <p>info@optimumklus.be</p><br>
@@ -401,7 +453,8 @@
         </div>
     </div>
 </footer>
-
+<script src="https://smtpjs.com/v3/smtp.js"></script>
+<script src="js/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
         integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB"
         crossorigin="anonymous"></script>
