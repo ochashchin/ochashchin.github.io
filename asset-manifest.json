@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "//ochashchin.github.io/react-demo/static/css/main.3d1c51d9.css",
+    "main.js": "//ochashchin.github.io/react-demo/static/js/main.dc0f119a.js",
+    "index.html": "//ochashchin.github.io/react-demo/index.html",
+    "main.3d1c51d9.css.map": "//ochashchin.github.io/react-demo/static/css/main.3d1c51d9.css.map",
+    "main.dc0f119a.js.map": "//ochashchin.github.io/react-demo/static/js/main.dc0f119a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3d1c51d9.css",
+    "static/js/main.dc0f119a.js"
+  ]
+}
