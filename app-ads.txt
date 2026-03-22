@@ -1,2 +1,1 @@
 google.com, pub-2874567203173670, DIRECT, f08c47fec0942fa0
-chartboost.com, 69a597a71edeb9d3b5438fe1, DIRECT
