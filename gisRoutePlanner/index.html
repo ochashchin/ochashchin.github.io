@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GIS Route Planner</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<link rel="icon" href="data:,"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f0f4f8;
+    color: #1e293b;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  #header {
+    background: #ffffff;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #cbd5e1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    z-index: 10;
+  }
+
+  #header h1 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e40af;
+    white-space: nowrap;
+    letter-spacing: -0.3px;
+  }
+
+  .coord-group { display: flex; gap: 5px; align-items: center; }
+
+  .coord-group label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .coord-group input {
+    width: 78px;
+    padding: 4px 7px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #1e293b;
+    font-size: 0.8rem;
+    transition: border-color 0.15s;
+  }
+  .coord-group input:focus { outline: none; border-color: #3b82f6; background: #fff; }
+
+  .sep { width: 1px; height: 28px; background: #e2e8f0; flex-shrink: 0; }
+
+  button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+
+  #btn-generate { background: #1d4ed8; color: #fff; }
+  #btn-generate:hover { background: #1e40af; }
+  #btn-export   { background: #059669; color: #fff; }
+  #btn-export:hover { background: #047857; }
+
+  #status {
+    font-size: 0.73rem; color: #64748b;
+    margin-left: auto; white-space: nowrap; min-width: 130px; text-align: right;
+  }
+  #status.ok    { color: #059669; }
+  #status.error { color: #dc2626; }
+
+  /* ── Controls bar ── */
+  #controls {
+    background: #ffffff;
+    padding: 7px 16px;
+    display: flex; gap: 6px; align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    z-index: 10;
+  }
+
+  #controls-label {
+    font-size: 0.72rem; font-weight: 600;
+    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+
+  /* ── Route checkboxes ── */
+  .route-cb-group {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-weight: 600; color: #475569;
+    cursor: pointer; user-select: none;
+  }
+  .route-cb-group input[type=checkbox] {
+    width: 14px; height: 14px; cursor: pointer;
+    accent-color: #5c5cd6;
+    flex-shrink: 0;
+  }
+  .route-cb-group .swatch {
+    width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+  }
+  .route-cb-group.is-active { color: #1e293b; }
+
+  .controls-hint {
+    margin-left: auto; font-size: 0.72rem; color: #94a3b8; font-style: italic;
+  }
+
+  /* ── Map ── */
+  #map { flex: 1; }
+
+  /* ── Info bar ── */
+  #info {
+    background: #ffffff; padding: 5px 16px;
+    font-size: 0.72rem; color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
+  }
+  .info-chip { display: flex; align-items: center; gap: 5px; }
+  .info-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: none; width: 15px; height: 15px;
+    border: 2px solid #bfdbfe; border-top-color: #1d4ed8;
+    border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 36px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #1e293b; color: #f8fafc;
+    padding: 8px 18px; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 600;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 9999; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  /* ── Waypoint marker styles (used by divIcon HTML) ── */
+  .wp-marker {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; border: 3px solid #5c5cd6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    cursor: grab;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wp-marker::after {
+    content: ''; display: block;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #5c5cd6;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>🗺 GIS Route Planner</h1>
+
+  <div class="coord-group">
+    <label>Start</label>
+    <input id="startLat" placeholder="lat" value="51.79"/>
+    <input id="startLng" placeholder="lng" value="29.05"/>
+  </div>
+
+  <div class="coord-group">
+    <label>End</label>
+    <input id="endLat" placeholder="lat" value="50.85"/>
+    <input id="endLng" placeholder="lng" value="30.48"/>
+  </div>
+
+  <input id="seed" type="hidden" value=""/>
+
+  <div class="sep"></div>
+
+  <button id="btn-generate">⚡ Generate</button>
+  <button id="btn-seed" style="display:none">🎲 New Seed</button>
+  <button id="btn-export">🔗 Copy Link</button>
+
+  <span id="compute-indicator" title="Computing route…" style="
+    display:none;width:14px;height:14px;border-radius:50%;
+    background:#1d4ed8;flex-shrink:0;
+    animation:pulse 0.9s ease-in-out infinite;
+  "></span>
+  <span id="error-badge" style="
+    display:none;font-size:0.72rem;font-weight:600;padding:2px 8px;
+    border-radius:10px;background:#fff1f2;color:#dc2626;
+    border:1px solid #fca5a5;white-space:nowrap;
+  "></span>
+  <span id="backend-status" title="Backend connection status" style="
+    font-size:0.72rem;font-weight:600;padding:3px 9px;border-radius:12px;
+    background:#f1f5f9;border:1px solid #e2e8f0;color:#94a3b8;
+    white-space:nowrap;cursor:default;margin-left:auto;
+  ">⬤ backend</span>
+</div>
+
+<div id="controls">
+  <span id="controls-label">Routes</span>
+
+  <label class="route-cb-group is-active" id="pill-main" for="cb-main">
+    <input type="checkbox" id="cb-main" checked/>
+    <span class="swatch" style="background:#5c5cd6"></span>
+    Main
+  </label>
+
+  <label class="route-cb-group" id="pill-left" for="cb-left">
+    <input type="checkbox" id="cb-left"/>
+    <span class="swatch" style="background:#009999"></span>
+    Left (CCW)
+  </label>
+
+  <label class="route-cb-group" id="pill-right" for="cb-right">
+    <input type="checkbox" id="cb-right"/>
+    <span class="swatch" style="background:#ff0066"></span>
+    Right (CW)
+  </label>
+
+  <span class="controls-hint">Click route line to add waypoint · drag to reshape · click waypoint to remove</span>
+</div>
+
+<div id="map"></div>
+
+<div id="info">
+  <div class="info-chip">
+    <span class="dot" style="background:#5c5cd6"></span>
+    <span id="info-main">Main: –</span>
+  </div>
+  <div class="info-chip">
+    <span class="dot" style="background:#009999"></span>
+    <span id="info-left">Left: –</span>
+  </div>
+  <div class="info-chip">
+    <span class="dot" style="background:#ff0066"></span>
+    <span id="info-right">Right: –</span>
+  </div>
+  <span id="info-grid" style="margin-left:auto">Grid: –</span>
+  <span id="info-time">Compute: –</span>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+// ── Backend config ─────────────────────────────────────────────────────────
+// When running locally:  leave as empty string → uses same origin (localhost:8080)
+// When hosted on GitHub Pages: set to your tunnel URL, e.g.:
+//   'https://abc123.ngrok-free.app'   (ngrok)
+//   'https://xyz.trycloudflare.com'   (cloudflare tunnel)
+const BACKEND_URL = 'https://abc123.ngrok-free.app';   // ← EDIT THIS when deploying to GitHub Pages
+
+// ── Route definitions ──────────────────────────────────────────────────────
+const ROUTE_DEFS = [
+  { id: 'main',  color: '#5c5cd6', selectedRoute: 0, cbId: 'cb-main',  pillId: 'pill-main'  },
+  { id: 'left',  color: '#009999', selectedRoute: 1, cbId: 'cb-left',  pillId: 'pill-left'  },
+  { id: 'right', color: '#ff0066', selectedRoute: 2, cbId: 'cb-right', pillId: 'pill-right' },  // pillId now just used as label id
+];
+
+// ── Map setup ──────────────────────────────────────────────────────────────
+const map = L.map('map').setView([51.3, 29.8], 8);
+const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors', maxZoom: 19
+});
+const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '© Esri', maxZoom: 19
+});
+osmLayer.addTo(map);
+L.control.layers({ 'Map': osmLayer, 'Satellite': satLayer }).addTo(map);
+
+// ── Backend health check ───────────────────────────────────────────────────
+async function checkBackend() {
+  const el = document.getElementById('backend-status');
+  try {
+    const r = await fetch(`${BACKEND_URL}/actuator/health`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      el.style.background = '#ecfdf5'; el.style.color = '#059669';
+      el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
+    } else { throw new Error(); }
+  } catch {
+    // /actuator not exposed — try a lightweight OPTIONS on /route
+    try {
+      const r2 = await fetch(`${BACKEND_URL}/route`, { method: 'OPTIONS', signal: AbortSignal.timeout(3000) });
+      el.style.background = '#ecfdf5'; el.style.color = '#059669';
+      el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
+    } catch {
+      el.style.background = '#fff1f2'; el.style.color = '#dc2626';
+      el.style.borderColor = '#fca5a5';
+      el.textContent = BACKEND_URL ? '⬤ backend offline' : '⬤ no backend url';
+    }
+  }
+}
+checkBackend();
+setInterval(checkBackend, 30_000);
+
+// ── State ──────────────────────────────────────────────────────────────────
+const routes = {};
+ROUTE_DEFS.forEach(def => {
+  routes[def.id] = { ...def, visible: def.id === 'main', path: null, polyline: null };
+});
+
+let activeRouteId = 'main';
+let currentSeed   = null;
+
+// Per-route ordered waypoint lists.
+// Each entry: { lat, lng, marker, routeId, order }
+// order = stable fractional float used for sort; never re-projects onto changing path.
+const routeWaypoints = { main: [], left: [], right: [] };
+
+// ── Start / End markers ────────────────────────────────────────────────────
+function makeEndpointIcon(color, label) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:30px;height:30px;border-radius:50%;
+      background:${color};border:3px solid #fff;
+      box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:800;color:#fff;font-family:sans-serif;
+    ">${label}</div>`,
+    iconSize: [30, 30], iconAnchor: [15, 15]
+  });
+}
+
+const startMarker = L.marker([51.79, 29.05], {
+  draggable: true, icon: makeEndpointIcon('#1d4ed8', 'S'), zIndexOffset: 500
+}).bindTooltip('Start — drag to move').addTo(map);
+
+const endMarker = L.marker([50.85, 30.48], {
+  draggable: true, icon: makeEndpointIcon('#dc2626', 'E'), zIndexOffset: 500
+}).bindTooltip('End — drag to move').addTo(map);
+
+startMarker.on('dragend', () => {
+  const ll = startMarker.getLatLng();
+  document.getElementById('startLat').value = ll.lat.toFixed(5);
+  document.getElementById('startLng').value = ll.lng.toFixed(5);
+  syncUrl();
+});
+endMarker.on('dragend', () => {
+  const ll = endMarker.getLatLng();
+  document.getElementById('endLat').value = ll.lat.toFixed(5);
+  document.getElementById('endLng').value = ll.lng.toFixed(5);
+  syncUrl();
+});
+
+// ── Waypoint icon ──────────────────────────────────────────────────────────
+function makeWaypointIcon(routeColor, index) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:22px;height:22px;border-radius:50%;
+      background:#ffffff;
+      border:3px solid ${routeColor};
+      box-shadow:0 2px 8px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.8);
+      display:flex;align-items:center;justify-content:center;
+      cursor:grab;
+      font-size:9px;font-weight:700;color:${routeColor};font-family:sans-serif;
+    ">${index + 1}</div>`,
+    iconSize: [22, 22], iconAnchor: [11, 11]
+  });
+}
+
+// Refresh all waypoint marker icons so numbers stay in order after insert/remove
+function refreshWaypointIcons(routeId) {
+  const color = routes[routeId].color;
+  routeWaypoints[routeId].forEach((wp, i) => {
+    wp.marker.setIcon(makeWaypointIcon(color, i));
+  });
+}
+
+// ── Checkbox controls ─────────────────────────────────────────────────────
+ROUTE_DEFS.forEach(def => {
+  const cb = document.getElementById(def.cbId);
+
+  cb.addEventListener('change', e => {
+    routes[def.id].visible = e.target.checked;
+    const poly = routes[def.id].polyline;
+    if (poly) {
+      if (e.target.checked) poly.addTo(map);
+      else map.removeLayer(poly);
+    }
+    // Checking a route also makes it the active route for drag-reshape
+    if (e.target.checked) setActiveRoute(def.id);
+  });
+});
+
+function setActiveRoute(id) {
+  activeRouteId = id;
+  ROUTE_DEFS.forEach(def => {
+    // Bold label text when active
+    document.getElementById(def.pillId).classList.toggle('is-active', def.id === id);
+    const r = routes[def.id];
+    if (r.polyline) {
+      r.polyline.setStyle({
+        weight:  def.id === id ? 5 : 3,
+        opacity: def.id === id ? 1.0 : 0.6,
+      });
+    }
+  });
+}
+setActiveRoute('main');
+
+// ── Generate / seed buttons ────────────────────────────────────────────────
+document.getElementById('btn-generate').addEventListener('click', () => {
+  clearAllWaypoints();
+  generateRoutes(-1);
+});
+document.getElementById('btn-seed').addEventListener('click', () => {
+  document.getElementById('seed').value = Math.floor(Math.random() * 1e9);
+  clearAllWaypoints();
+  generateRoutes(-1);
+});
+
+// ── Core generate function ─────────────────────────────────────────────────
+async function generateRoutes(selectedRoute, wpOverride) {
+  setStatus('Computing…', true);
+
+  // wpOverride: optional explicit array used during auto-load from URL
+  // otherwise use per-route waypoint state
+  let wpsToSend;
+  if (wpOverride !== undefined) {
+    wpsToSend = wpOverride;
+  } else if (selectedRoute === -1) {
+    // All routes share no waypoints on fresh generate
+    wpsToSend = [];
+  } else {
+    const routeId = ['main', 'left', 'right'][selectedRoute];
+    wpsToSend = routeWaypoints[routeId];
+  }
+
+  const body = {
+    startLat:      parseFloat(document.getElementById('startLat').value),
+    startLng:      parseFloat(document.getElementById('startLng').value),
+    endLat:        parseFloat(document.getElementById('endLat').value),
+    endLng:        parseFloat(document.getElementById('endLng').value),
+    seed:          parseInt(document.getElementById('seed').value) || 0,
+    waypoints:     wpsToSend.map(w => [w.lat, w.lng]),
+    selectedRoute: selectedRoute
+  };
+
+  try {
+    const resp = await fetch(`${BACKEND_URL}/route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    applyRouteData(data, selectedRoute);
+    syncUrl();
+  } catch (e) {
+    setStatus('Error: ' + e.message, false, true);
+  }
+}
+
+// ── Apply response data to map ─────────────────────────────────────────────
+function applyRouteData(data, selectedRoute) {
+  if (data.seed) {
+    currentSeed = data.seed;
+    document.getElementById('seed').value = data.seed;
+  }
+
+  const toUpdate = selectedRoute === -1
+    ? ['main', 'left', 'right']
+    : [['main', 'left', 'right'][selectedRoute]];
+
+  toUpdate.forEach(id => {
+    const variant = data[id];
+    if (!variant || !variant.path) return;
+
+    const r = routes[id];
+    r.path = variant.path;   // store raw path for projection calculations
+
+    if (r.polyline) map.removeLayer(r.polyline);
+
+    const latlngs = variant.path.map(p => [p[0], p[1]]);
+    const isActive = (id === activeRouteId);
+
+    r.polyline = L.polyline(latlngs, {
+      color:   r.color,
+      weight:  isActive ? 5 : 3,
+      opacity: isActive ? 1.0 : 0.6,
+    });
+
+    if (r.visible) r.polyline.addTo(map);
+
+    // Polyline click → insert waypoint at correct position along this route
+    r.polyline.on('click', function(e) {
+      L.DomEvent.stopPropagation(e);
+      setActiveRoute(id);
+      insertWaypointAtPosition(e.latlng, id);
+    });
+  });
+
+  if (data.main)  document.getElementById('info-main').textContent  = `Main: ${data.main.distanceKm} km · cost ${data.main.avgTerrainCost}`;
+  if (data.left)  document.getElementById('info-left').textContent  = `Left: ${data.left.distanceKm} km · cost ${data.left.avgTerrainCost}`;
+  if (data.right) document.getElementById('info-right').textContent = `Right: ${data.right.distanceKm} km · cost ${data.right.avgTerrainCost}`;
+  document.getElementById('info-grid').textContent = `Grid: ${data.gridRows}×${data.gridCols}`;
+  document.getElementById('info-time').textContent = `⏱ ${data.computeMs} ms`;
+
+  setStatus('', false);
+}
+
+
+// ── Waypoint ordering: fractional-index (stable across recomputes) ─────────
+//
+// Each waypoint carries a float `order` key. The list is always sorted by order.
+// When inserting between two existing waypoints with orders A and B, new order = (A+B)/2.
+// This gives unlimited stable insertion without re-projecting onto a changing path.
+//
+// To find WHERE along the route to insert a new click point we project only
+// against the *waypoint anchors* (start + existing wps + end), not the full
+// rendered path — so the result never goes stale when the path shape changes.
+
+const START_ORDER = 0;
+const END_ORDER   = 1e9;  // sentinel — end of route
+
+/** Squared Euclidean distance between two [lat,lng] points (good enough for ordering) */
+function dist2(aLat, aLng, bLat, bLng) {
+  const dlat = aLat - bLat, dlng = aLng - bLng;
+  return dlat * dlat + dlng * dlng;
+}
+
+/**
+ * Project point P onto the segment A→B.
+ * Returns { t: [0,1], dist2: squared distance from P to nearest point on segment }.
+ */
+function projectSegment(pLat, pLng, aLat, aLng, bLat, bLng) {
+  const dx = bLat - aLat, dy = bLng - aLng;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return { t: 0, dist2: dist2(pLat, pLng, aLat, aLng) };
+  const t = Math.max(0, Math.min(1,
+    ((pLat - aLat) * dx + (pLng - aLng) * dy) / len2
+  ));
+  const nearLat = aLat + t * dx, nearLng = aLng + t * dy;
+  return { t, dist2: dist2(pLat, pLng, nearLat, nearLng) };
+}
+
+/**
+ * Given a click at (lat, lng) and the current ordered waypoint list for a route,
+ * find the two anchor points (start, wp0, wp1, …, end) that bracket the click —
+ * i.e. the segment A→B that the click is nearest to.
+ *
+ * Returns { orderBefore, orderAfter } so the caller can set newOrder = (before+after)/2.
+ *
+ * Anchors list: [ {lat:startLat, lng:startLng, order:START_ORDER},
+ *                 ...sorted wps...,
+ *                 {lat:endLat,   lng:endLng,   order:END_ORDER} ]
+ */
+function findInsertOrders(lat, lng, wps) {
+  const startLat = parseFloat(document.getElementById('startLat').value);
+  const startLng = parseFloat(document.getElementById('startLng').value);
+  const endLat   = parseFloat(document.getElementById('endLat').value);
+  const endLng   = parseFloat(document.getElementById('endLng').value);
+
+  // Build anchor list from start → sorted waypoints → end
+  const anchors = [
+    { lat: startLat, lng: startLng, order: START_ORDER },
+    ...wps.map(w => ({ lat: w.lat, lng: w.lng, order: w.order })),
+    { lat: endLat,   lng: endLng,   order: END_ORDER }
+  ];
+
+  let bestDist2 = Infinity;
+  let bestBefore = START_ORDER;
+  let bestAfter  = END_ORDER;
+
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    const { dist2: d2 } = projectSegment(lat, lng, a.lat, a.lng, b.lat, b.lng);
+    if (d2 < bestDist2) {
+      bestDist2  = d2;
+      bestBefore = a.order;
+      bestAfter  = b.order;
+    }
+  }
+
+  return { orderBefore: bestBefore, orderAfter: bestAfter };
+}
+
+// Insert a new draggable waypoint with stable fractional ordering
+function insertWaypointAtPosition(latlng, routeId) {
+  const r        = routes[routeId];
+  const routeDef = ROUTE_DEFS.find(d => d.id === routeId);
+  const color    = r.color;
+  const selIdx   = routeDef.selectedRoute;
+  const wps      = routeWaypoints[routeId];  // always sorted by .order
+
+  if (wps.length >= 80) {
+    showToast('Maximum 80 waypoints reached for this route');
+    return;
+  }
+
+  // Find which two anchors bracket this click, assign fractional order
+  const { orderBefore, orderAfter } = findInsertOrders(latlng.lat, latlng.lng, wps);
+  const newOrder = (orderBefore + orderAfter) / 2;
+
+  const marker = L.marker([latlng.lat, latlng.lng], {
+    draggable:    true,
+    zIndexOffset: 900,
+    icon:         makeWaypointIcon(color, 0),  // number set by refreshWaypointIcons
+  })
+  .bindTooltip('Drag to reshape · click to remove', { direction: 'top', offset: [0, -14] })
+  .addTo(map);
+
+  const wpEntry = { lat: latlng.lat, lng: latlng.lng, marker, routeId, order: newOrder };
+
+  // Insert into sorted position (binary-search style)
+  let insertAt = wps.length;
+  for (let i = 0; i < wps.length; i++) {
+    if (newOrder < wps[i].order) { insertAt = i; break; }
+  }
+  wps.splice(insertAt, 0, wpEntry);
+  refreshWaypointIcons(routeId);
+
+  // Click → remove and recompute
+  marker.on('click', function(e) {
+    L.DomEvent.stopPropagation(e);
+    const idx = routeWaypoints[routeId].indexOf(wpEntry);
+    if (idx !== -1) routeWaypoints[routeId].splice(idx, 1);
+    map.removeLayer(marker);
+    refreshWaypointIcons(routeId);
+    generateRoutes(selIdx);
+  });
+
+  // Drag live update
+  marker.on('drag', function() {
+    const pos = marker.getLatLng();
+    wpEntry.lat = pos.lat;
+    wpEntry.lng = pos.lng;
+  });
+
+  // On dragend: re-anchor the order by finding where the new position sits
+  // among current waypoints, then recompute
+  marker.on('dragend', function() {
+    const pos = marker.getLatLng();
+    wpEntry.lat = pos.lat;
+    wpEntry.lng = pos.lng;
+
+    // Remove from list temporarily, find its new bracket, re-insert
+    const idx = routeWaypoints[routeId].indexOf(wpEntry);
+    routeWaypoints[routeId].splice(idx, 1);
+
+    const { orderBefore: ob, orderAfter: oa } =
+      findInsertOrders(pos.lat, pos.lng, routeWaypoints[routeId]);
+    wpEntry.order = (ob + oa) / 2;
+
+    // Re-insert at correct sorted position
+    let newIdx = routeWaypoints[routeId].length;
+    for (let i = 0; i < routeWaypoints[routeId].length; i++) {
+      if (wpEntry.order < routeWaypoints[routeId][i].order) { newIdx = i; break; }
+    }
+    routeWaypoints[routeId].splice(newIdx, 0, wpEntry);
+    refreshWaypointIcons(routeId);
+    generateRoutes(selIdx);
+  });
+
+  generateRoutes(selIdx);
+}
+
+function clearAllWaypoints() {
+  ['main', 'left', 'right'].forEach(id => {
+    routeWaypoints[id].forEach(w => map.removeLayer(w.marker));
+    routeWaypoints[id] = [];
+  });
+}
+
+
+// ── URL sync ───────────────────────────────────────────────────────────────
+function syncUrl() {
+  history.replaceState(null, '', `${location.pathname}?${buildUrlParams()}`);
+}
+
+/**
+ * Builds URL params encoding ALL three routes' waypoints using per-route keys:
+ *   waypoints_main=lat,lng|lat,lng
+ *   waypoints_left=lat,lng
+ *   waypoints_right=lat,lng|lat,lng|lat,lng
+ *
+ * GET endpoint accepts `waypoints` (for the main/active route compat) but the
+ * share link uses the full per-route keys so the page can fully restore state.
+ * The backend /route GET only needs `waypoints` for a single route compute —
+ * the share link always triggers a POST via the page JS, so we encode everything
+ * needed to reconstruct the full session.
+ */
+function buildUrlParams() {
+  const params = new URLSearchParams({
+    start: `${document.getElementById('startLat').value},${document.getElementById('startLng').value}`,
+    end:   `${document.getElementById('endLat').value},${document.getElementById('endLng').value}`,
+  });
+
+  if (currentSeed) params.set('seed', currentSeed);
+  if (activeRouteId !== 'main') params.set('activeRoute', activeRouteId);
+
+  // Encode each route's waypoints under its own key
+  ['main', 'left', 'right'].forEach(id => {
+    const wps = routeWaypoints[id];
+    if (wps.length > 0) {
+      params.set(
+        `waypoints_${id}`,
+        wps.map(w => `${w.lat.toFixed(6)},${w.lng.toFixed(6)}`).join('|')
+      );
+    }
+  });
+
+  return params;
+}
+
+// ── Export link ────────────────────────────────────────────────────────────
+document.getElementById('btn-export').addEventListener('click', () => {
+  const url = `${location.origin}${location.pathname}?${buildUrlParams()}`;
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('🔗 Link copied!'))
+    .catch(() => { prompt('Copy this link:', url); });
+});
+
+// ── Auto-load from URL ─────────────────────────────────────────────────────
+(function autoLoad() {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('start') && !p.has('end')) return;
+
+  // Restore coordinates
+  if (p.has('start')) {
+    const [sLat, sLng] = p.get('start').split(',').map(Number);
+    document.getElementById('startLat').value = sLat;
+    document.getElementById('startLng').value = sLng;
+    startMarker.setLatLng([sLat, sLng]);
+  }
+  if (p.has('end')) {
+    const [eLat, eLng] = p.get('end').split(',').map(Number);
+    document.getElementById('endLat').value = eLat;
+    document.getElementById('endLng').value = eLng;
+    endMarker.setLatLng([eLat, eLng]);
+  }
+  if (p.has('seed')) document.getElementById('seed').value = p.get('seed');
+  if (p.has('activeRoute')) setActiveRoute(p.get('activeRoute'));
+
+  // Parse per-route waypoints from URL into a plain {lat,lng} list per route.
+  // We can't place markers yet because paths don't exist — we'll restore them
+  // inside a two-phase generate: first compute all routes (so paths exist for
+  // projection), then place markers and recompute each affected route.
+  const pendingWps = {};
+  ['main', 'left', 'right'].forEach(id => {
+    const key = `waypoints_${id}`;
+    if (p.has(key)) {
+      pendingWps[id] = p.get(key).split('|').map(s => {
+        const [lat, lng] = s.split(',').map(Number);
+        return { lat, lng };
+      });
+    }
+    // Legacy compat: plain `waypoints` param with no route key → main route
+    if (id === 'main' && !pendingWps['main'] && p.has('waypoints')) {
+      pendingWps['main'] = p.get('waypoints').split('|').map(s => {
+        const [lat, lng] = s.split(',').map(Number);
+        return { lat, lng };
+      });
+    }
+  });
+
+  const hasPendingWps = Object.keys(pendingWps).length > 0;
+
+  if (!hasPendingWps) {
+    // No waypoints — simple generate
+    generateRoutes(-1);
+    return;
+  }
+
+  // Phase 1: generate routes without waypoints (so r.path exists for future drags)
+  // Phase 2: restore markers with URL-index order (no projection — trust URL sequence)
+  // Phase 3: recompute each affected route with its waypoints
+  generateRoutesRaw(-1, []).then(() => {
+    const routesToRecompute = new Set();
+
+    Object.entries(pendingWps).forEach(([routeId, wpsLatLng]) => {
+      const def   = ROUTE_DEFS.find(d => d.id === routeId);
+      const color = routes[routeId].color;
+      const selIdx = def.selectedRoute;
+
+      // Assign orders as urlIndex * 1000 — URL is already in correct sequence.
+      // No projection against the path needed: the URL was written in correct order,
+      // so we just honour that sequence directly and skip findInsertOrders entirely.
+      wpsLatLng.forEach(({ lat, lng }, urlIndex) => {
+        if (routeWaypoints[routeId].length >= 80) return;
+
+        const order = (urlIndex + 1) * 1000;  // 1000, 2000, 3000 … gap allows future inserts
+
+        const marker = L.marker([lat, lng], {
+          draggable:    true,
+          zIndexOffset: 900,
+          icon:         makeWaypointIcon(color, urlIndex),
+        })
+        .bindTooltip('Drag to reshape · click to remove', { direction: 'top', offset: [0, -14] })
+        .addTo(map);
+
+        const wpEntry = { lat, lng, marker, routeId, order };
+
+        // Always append — URL order IS the correct order
+        routeWaypoints[routeId].push(wpEntry);
+
+        marker.on('click', function(e) {
+          L.DomEvent.stopPropagation(e);
+          const idx = routeWaypoints[routeId].indexOf(wpEntry);
+          if (idx !== -1) routeWaypoints[routeId].splice(idx, 1);
+          map.removeLayer(marker);
+          refreshWaypointIcons(routeId);
+          generateRoutes(selIdx);
+        });
+
+        marker.on('drag', function() {
+          const pos = marker.getLatLng();
+          wpEntry.lat = pos.lat;
+          wpEntry.lng = pos.lng;
+        });
+
+        marker.on('dragend', function() {
+          const pos = marker.getLatLng();
+          wpEntry.lat = pos.lat;
+          wpEntry.lng = pos.lng;
+          // Re-anchor: remove temporarily, find bracket among remaining, re-insert
+          const i = routeWaypoints[routeId].indexOf(wpEntry);
+          routeWaypoints[routeId].splice(i, 1);
+          const { orderBefore: ob, orderAfter: oa } =
+            findInsertOrders(pos.lat, pos.lng, routeWaypoints[routeId]);
+          wpEntry.order = (ob + oa) / 2;
+          let newI = routeWaypoints[routeId].length;
+          for (let j = 0; j < routeWaypoints[routeId].length; j++) {
+            if (wpEntry.order < routeWaypoints[routeId][j].order) { newI = j; break; }
+          }
+          routeWaypoints[routeId].splice(newI, 0, wpEntry);
+          refreshWaypointIcons(routeId);
+          generateRoutes(selIdx);
+        });
+
+        routesToRecompute.add(routeId);
+      });
+
+      // No sort needed — waypoints were pushed in URL order
+      refreshWaypointIcons(routeId);
+    });
+
+    // Recompute each route that has restored waypoints
+    const recomputePromises = [...routesToRecompute].map(routeId => {
+      const selIdx = ROUTE_DEFS.find(d => d.id === routeId).selectedRoute;
+      return generateRoutes(selIdx);
+    });
+
+    Promise.all(recomputePromises).then(() => syncUrl());
+  });
+})();
+
+// ── Low-level generate (bypasses the routeWaypoints state, used for phase-1 init) ──
+async function generateRoutesRaw(selectedRoute, wpsArray) {
+  const body = {
+    startLat:      parseFloat(document.getElementById('startLat').value),
+    startLng:      parseFloat(document.getElementById('startLng').value),
+    endLat:        parseFloat(document.getElementById('endLat').value),
+    endLng:        parseFloat(document.getElementById('endLng').value),
+    seed:          parseInt(document.getElementById('seed').value) || 0,
+    waypoints:     wpsArray,
+    selectedRoute: selectedRoute
+  };
+  setStatus('Computing…', true);
+  try {
+    const resp = await fetch(`${BACKEND_URL}/route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    applyRouteData(data, selectedRoute);
+  } catch (e) {
+    setStatus('Error: ' + e.message, false, true);
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function setStatus(msg, loading, isError) {
+  // Pulsing blue circle while computing; error badge on failure; silent on done
+  const indicator = document.getElementById('compute-indicator');
+  const errBadge  = document.getElementById('error-badge');
+  if (loading) {
+    indicator.style.display = 'block';
+    errBadge.style.display  = 'none';
+  } else if (isError) {
+    indicator.style.display  = 'none';
+    errBadge.textContent     = msg;
+    errBadge.style.display   = 'inline-block';
+    setTimeout(() => { errBadge.style.display = 'none'; }, 6000);
+  } else {
+    // Done — hide everything silently
+    indicator.style.display = 'none';
+    errBadge.style.display  = 'none';
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
