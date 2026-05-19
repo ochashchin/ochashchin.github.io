@@ -278,7 +278,7 @@
 // Backend URL auto-detection:
 // - When served from localhost (Spring Boot directly) → use same origin, no CORS needed
 // - When served from GitHub Pages / any other static host → use the ngrok/tunnel URL below
-const BACKEND_URL_OVERRIDE = 'https://abc123.ngrok-free.app';  // ← set your ngrok URL here ONLY for GitHub Pages deploy
+const BACKEND_URL_OVERRIDE = 'https://xyz.trycloudflare.com';  // ← set your ngrok URL here ONLY for GitHub Pages deploy
 //                                    e.g. 'https://abc123.ngrok-free.app'
 //                                    leave empty '' when running locally via Spring Boot
 
@@ -308,23 +308,27 @@ L.control.layers({ 'Map': osmLayer, 'Satellite': satLayer }).addTo(map);
 // ── Backend health check ───────────────────────────────────────────────────
 async function checkBackend() {
   const el = document.getElementById('backend-status');
+  if (!BACKEND_URL) {
+    // Same-origin (local dev) — backend is always reachable, skip check
+    el.style.background = '#ecfdf5'; el.style.color = '#059669';
+    el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
+    return;
+  }
   try {
-    const r = await fetch(`${BACKEND_URL}/actuator/health`, { headers: { 'ngrok-skip-browser-warning': '1' }, signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      el.style.background = '#ecfdf5'; el.style.color = '#059669';
-      el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
-    } else { throw new Error(); }
+    // Use no-cors mode for the ping — never triggers a preflight.
+    // We can't read the response body in no-cors, but if fetch resolves
+    // (doesn't throw) it means the server is up and ngrok is forwarding.
+    await fetch(`${BACKEND_URL}/ping`, {
+      mode: 'no-cors',
+      headers: { 'ngrok-skip-browser-warning': '1' },
+      signal: AbortSignal.timeout(4000)
+    });
+    el.style.background = '#ecfdf5'; el.style.color = '#059669';
+    el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
   } catch {
-    // /actuator not exposed — try a lightweight OPTIONS on /route
-    try {
-      const r2 = await fetch(`${BACKEND_URL}/route`, { method: 'OPTIONS', headers: { 'ngrok-skip-browser-warning': '1' }, signal: AbortSignal.timeout(3000) });
-      el.style.background = '#ecfdf5'; el.style.color = '#059669';
-      el.style.borderColor = '#6ee7b7'; el.textContent = '⬤ backend ok';
-    } catch {
-      el.style.background = '#fff1f2'; el.style.color = '#dc2626';
-      el.style.borderColor = '#fca5a5';
-      el.textContent = BACKEND_URL ? '⬤ backend offline' : '⬤ no backend url';
-    }
+    el.style.background = '#fff1f2'; el.style.color = '#dc2626';
+    el.style.borderColor = '#fca5a5';
+    el.textContent = '⬤ backend offline';
   }
 }
 checkBackend();
@@ -476,9 +480,12 @@ async function generateRoutes(selectedRoute, wpOverride) {
   };
 
   try {
+    // Send as text/plain so the browser treats it as a "simple request" —
+    // no CORS preflight (OPTIONS) is triggered, which fixes ngrok free tier.
+    // The server accepts text/plain and parses the JSON body manually.
     const resp = await fetch(`${BACKEND_URL}/route`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body)
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -897,9 +904,12 @@ async function generateRoutesRaw(selectedRoute, wpsArray) {
   };
   setStatus('Computing…', true);
   try {
+    // Send as text/plain so the browser treats it as a "simple request" —
+    // no CORS preflight (OPTIONS) is triggered, which fixes ngrok free tier.
+    // The server accepts text/plain and parses the JSON body manually.
     const resp = await fetch(`${BACKEND_URL}/route`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body)
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
